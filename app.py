@@ -122,15 +122,14 @@ def admin_dashboard():
     orders = list(mongo.db.orders.find())
 
     for order in orders:
-        # ✅ Get user email
+        # Get user email
         user_id = order.get('user_id')
         user = mongo.db.users.find_one({'_id': user_id}) if user_id else None
         order['user'] = user['email'] if user else 'N/A'
 
-        # ✅ Handle items (supporting multiple products if needed)
+        # Handle items
         order_items = order.get('items', [])
         if order_items:
-            # Show only the first product for summary
             first_item = order_items[0]
             order['product_name'] = first_item.get('name', 'N/A')
             order['price'] = first_item.get('price', 0)
@@ -142,12 +141,16 @@ def admin_dashboard():
             order['quantity'] = 0
             order['total_price'] = 0
 
-        # ✅ Address (from nested address dict)
+        # Address
         addr = order.get('address', {})
         address_parts = [addr.get('street', ''), addr.get('city', ''), addr.get('state', ''), addr.get('zip_code', ''), addr.get('country', '')]
         order['address'] = ', '.join([part for part in address_parts if part])
 
         order['status'] = order.get('status', 'Pending')
+
+        # 🔧 FIX: Convert ObjectId to str
+        order['_id'] = str(order['_id'])
+        order['user_id'] = str(order['user_id']) if 'user_id' in order else None
 
     return render_template(
         'admin_dashboard.html',
@@ -156,6 +159,7 @@ def admin_dashboard():
         total_orders=total_orders,
         orders=orders
     )
+
 
 
 
