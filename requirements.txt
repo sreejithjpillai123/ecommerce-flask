@@ -89,3 +89,4 @@ wrapt==1.14.1
 gunicorn
 flask_pymongo
 flask_migrate
+Flask-PyMongo
