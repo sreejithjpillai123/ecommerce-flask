@@ -48,10 +48,7 @@ class User(UserMixin):
 
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
-    return User(user) if user else None
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -61,7 +58,7 @@ def index():
     return redirect(url_for('home') if current_user.is_authenticated else url_for('login'))
 
 @app.route('/home')
-@login_required
+
 def home():
     products = list(mongo.db.products.find())
     return render_template('home.html', products=products)
