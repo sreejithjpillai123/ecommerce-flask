@@ -26,7 +26,6 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 app.config["MONGO_URI"] = "mongodb://sreejith:yourpassword@cluster0.mongodb.net/ecommerce"
 
-
 mongo = PyMongo(app)
 app.config['SECRET_KEY'] = 'your_secret_key'
 bcrypt = Bcrypt(app)
@@ -48,7 +47,10 @@ class User(UserMixin):
 
 
 
-
+@login_manager.user_loader
+def load_user(user_id):
+    user = mongo.db.users.find_one({'_id': ObjectId(user_id)})
+    return User(user) if user else None
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -58,7 +60,7 @@ def index():
     return redirect(url_for('home') if current_user.is_authenticated else url_for('login'))
 
 @app.route('/home')
-
+@login_required
 def home():
     products = list(mongo.db.products.find())
     return render_template('home.html', products=products)
@@ -122,35 +124,31 @@ def admin_dashboard():
     orders = list(mongo.db.orders.find())
 
     for order in orders:
-        # Get user email
+        # Convert user_id to ObjectId if needed for query
         user_id = order.get('user_id')
+        if user_id and not isinstance(user_id, ObjectId):
+            try:
+                user_id = ObjectId(user_id)
+            except:
+                user_id = None
         user = mongo.db.users.find_one({'_id': user_id}) if user_id else None
         order['user'] = user['email'] if user else 'N/A'
 
-        # Handle items
-        order_items = order.get('items', [])
-        if order_items:
-            first_item = order_items[0]
-            order['product_name'] = first_item.get('name', 'N/A')
-            order['price'] = first_item.get('price', 0)
-            order['quantity'] = first_item.get('quantity', 0)
-            order['total_price'] = first_item.get('price', 0) * first_item.get('quantity', 0)
-        else:
-            order['product_name'] = 'N/A'
-            order['price'] = 0
-            order['quantity'] = 0
-            order['total_price'] = 0
+        # Keep the full items list
+        order['items'] = order.get('items', [])
 
-        # Address
+        # Prepare full address string from nested address dict
         addr = order.get('address', {})
-        address_parts = [addr.get('street', ''), addr.get('city', ''), addr.get('state', ''), addr.get('zip_code', ''), addr.get('country', '')]
+        address_parts = [
+            addr.get('street', ''),
+            addr.get('city', ''),
+            addr.get('state', ''),
+            addr.get('zip_code', ''),
+            addr.get('country', '')
+        ]
         order['address'] = ', '.join([part for part in address_parts if part])
 
         order['status'] = order.get('status', 'Pending')
-
-        # 🔧 FIX: Convert ObjectId to str
-        order['_id'] = str(order['_id'])
-        order['user_id'] = str(order['user_id']) if 'user_id' in order else None
 
     return render_template(
         'admin_dashboard.html',
@@ -159,8 +157,6 @@ def admin_dashboard():
         total_orders=total_orders,
         orders=orders
     )
-
-
 
 
 
@@ -580,4 +576,5 @@ def contact():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
