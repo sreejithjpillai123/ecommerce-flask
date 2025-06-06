@@ -15,7 +15,7 @@ from bson.errors import InvalidId
 
 
 app = Flask(__name__)
-app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
+
 UPLOAD_FOLDER = 'static/uploads'  # Set upload folder path
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Allowed file types
 
@@ -23,7 +23,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 MONGO_URI = mongodb://root:rnfDuxOWqCMKnUWnPseIJBIOXwoZNRsl@mongodb.railway.internal:27017
-
+app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 
 mongo = PyMongo(app)
 app.config['SECRET_KEY'] = 'your_secret_key'
