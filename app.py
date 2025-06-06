@@ -1,18 +1,12 @@
-from flask import Flask, render_template, redirect, url_for, request, session
+import os
+from flask import Flask, render_template, redirect, url_for, request, session, flash
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from flask import flash
-from flask_migrate import Migrate
-import os
 from datetime import datetime
-from bson import ObjectId
-
-
-from bson.errors import InvalidId
-
 
 app = Flask(__name__)
 
@@ -21,15 +15,24 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}  # Allowed file types
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# IMPORTANT: Remove the direct assignment of MONGO_URI here.
+# Instead, you should ONLY get it from environment variables for security.
 
-MONGO_URI = mongodb://root:rnfDuxOWqCMKnUWnPseIJBIOXwoZNRsl@mongodb.railway.internal:27017
+# This line below is wrong syntax and must be removed:
+# MONGO_URI = mongodb://root:rnfDuxOWqCMKnUWnPseIJBIOXwoZNRsl@mongodb.railway.internal:27017
+
+# Correct way: get MONGO_URI from environment variable
 app.config["MONGO_URI"] = os.environ.get("MONGO_URI")
 
 mongo = PyMongo(app)
+
 app.config['SECRET_KEY'] = 'your_secret_key'
+
 bcrypt = Bcrypt(app)
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
 
 # User Model
 class User(UserMixin):
