@@ -574,13 +574,14 @@ def contact():
     return render_template('contact.html')
 
 
-@app.route('/test-mongo')
+@app.route("/test-mongo")
 def test_mongo():
     try:
         mongo.db.command("ping")
-        return "MongoDB connected successfully!"
+        return "✅ MongoDB connected successfully!"
     except Exception as e:
-        return f"MongoDB connection failed: {e}"
+        return f"❌ MongoDB connection failed: {e}"
+
 
 
 if __name__ == '__main__':
